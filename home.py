@@ -1,6 +1,7 @@
 import streamlit as st
 from decimal import Decimal
 import datetime as dt
+import numpy as np
 
 from lib.address import Address
 from lib.house import House
@@ -20,7 +21,7 @@ if "mortgage" not in st.session_state:
 
 st.title("Mortgage Calculator")
 
-seg1, seg2 = st.columns([0.4, 0.6])
+seg1, seg2 = st.columns([0.35, 0.65])
 
 property_expander = seg1.expander("Property Details", expanded=False)
 with property_expander:
@@ -89,7 +90,7 @@ with mortgage_expander:
             house=st.session_state.house,
             interest_rate=mortgage_dict["interest_rate"] / 100,
             start_date=mortgage_dict["start_date"],
-            years=mortgage_dict["years"]
+            years=mortgage_dict["years"],
         )
 
     mortgage_form = st.form(key="mortgage_form")
@@ -97,18 +98,31 @@ with mortgage_expander:
         col1, col2 = st.columns(2)
         mortgage_dict = {}
         mortgage_dict["principle"] = col1.number_input("Principle $AUD", min_value=0.0)
-        mortgage_dict["current_balance"] = col1.number_input("Current Balance $AUD", min_value=0.0)
+        mortgage_dict["current_balance"] = col1.number_input(
+            "Current Balance $AUD", min_value=0.0
+        )
         mortgage_dict["start_date"] = col2.date_input("Start Date")
-        mortgage_dict["years"] = col2.selectbox("Mortgage Term (Years)", options=[5, 10, 20, 30])
-        mortgage_dict["interest_rate"] = st.slider("Interest Rate", min_value=0.5, max_value=25.0, step=0.1)
+        mortgage_dict["years"] = col2.selectbox(
+            "Mortgage Term (Years)", options=[5, 10, 20, 30]
+        )
+        mortgage_dict["interest_rate"] = st.slider(
+            "Interest Rate", min_value=0.5, max_value=25.0, step=0.1
+        )
 
         update_mortgage_button = st.form_submit_button(
             "Update Mortgage Details", on_click=update_mortgage_callback
         )
 
+    monthly_payment = seg1.slider(
+        "Monthly Payments $AUD", min_value=100.0, max_value=10000.0, step=100.0
+    )
+
 if st.session_state.mortgage is None:
     st.stop()
 
-monthly_payment = seg2.slider("Monthly Payments $AUD", min_value=100.0, max_value=10000.0, step=100.0)
-fig = plot.plot_mortgage_payments(st.session_state.mortgage, monthly_payment=h.to_decimal(monthly_payment))
+fig, interest = plot.plot_mortgage_payments(
+    st.session_state.mortgage, monthly_payment=h.to_decimal(monthly_payment)
+)
+total_interest = np.sum(interest)
+seg2.metric("Total Interest", value=f"AUD${total_interest :,.0f}")
 seg2.plotly_chart(fig, use_container_width=True)

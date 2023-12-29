@@ -26,10 +26,10 @@ class Mortgage:
     def get_deposit(self):
         """Return the original deposit for the property"""
         return self.house.purchase_price - self.principle
-    
+
     def get_end_date(self):
         return time.add_years(self.start_date, years=self.years)
-    
+
     def get_amount_paid_off(self):
         return self.principle - self.current_balance
 
@@ -37,22 +37,22 @@ class Mortgage:
         pass
 
     def pay_off_mortgage(self, monthly_payment: Decimal):
-        
         num_months = time.months_between(self.start_date, self.get_end_date())
-        monthly_rate = interest.convert_yearly_to_monthly_interest(annual_rate=self.interest_rate)
+        monthly_rate = interest.convert_yearly_to_monthly_interest(
+            annual_rate=self.interest_rate
+        )
 
         balance = np.zeros(num_months)
-        interest_payments = np.zeros(num_months) 
+        interest_payments = np.zeros(num_months)
 
         starting_balance = float(self.current_balance)
         for i in range(num_months):
-
             interest_payments[i] = starting_balance * monthly_rate
             starting_balance += interest_payments[i]
             balance[i] = starting_balance - float(monthly_payment)
 
             if balance[i] < 0:
-                balance[i] = 0 
+                balance[i] = 0
                 break
 
             starting_balance = balance[i]
@@ -61,6 +61,3 @@ class Mortgage:
         interest_payments = np.around(interest_payments, 2)
 
         return balance, interest_payments
-
-    
-
