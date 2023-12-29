@@ -9,4 +9,4 @@ class Address:
     suburb: str
     state: str
     postcode: int
-    country: int
+    country: str
